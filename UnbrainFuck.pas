@@ -1,15 +1,14 @@
 {
 	Author: Paul Sarda
+	Version 0.01
 }
 program PascalBrainFuck;
 
 uses
   SysUtils, process;
 
-const
-	DEFUALT_FILE_NAME = 'test.pas';
-
 type
+	// used to store all options
  Options = record
   keepFile : Boolean;
   inputFileName : UnicodeString;
@@ -17,21 +16,23 @@ type
   pascalOptions : String;
  end;
 
-
-function TotalAcco(var code: AnsiString; checkChar: AnsiChar): Integer;
+//
+// Counts the Number of times a char is in a AnsiString
+//
+function OccurOfChar(const code: AnsiString; checkChar: Char): Integer;
 var
-	i : Integer;
-	temp : String;
+	i: Integer;
 
 begin
 	result := 0;
 	for i:=0 to Length(code) do
-	begin
-		if code[i] = checkChar then
+		if (code[i] = checkChar) then
 			result += 1;
-	end;
 end;
 
+//
+// Counts How many Chars in a string in a row example: ++++ would be 4 so it would return 4
+//
 function HowManyUntilNext(var toRead: AnsiString; var idx: Integer; toCheck: AnsiChar): Byte;
 begin
 	result := 0;
@@ -43,14 +44,10 @@ begin
 	idx -= 1;
 end;
 
-procedure DeleteGarbage(var code: AnsiString; offset: Integer);
-begin
-	if (code[offset] = Chr(32)) or (code[offset] = Chr(9)) or (code[offset] = Chr(13)) then
-		Delete(code, offset, 1);
-	if offset < Length(code) then
-		DeleteGarbage(code, offset + 1);
-end;
 
+//
+// interprets Brainfuck code an writes the approtie Pascal Code the writeFile
+//
 procedure ReadBrainFuckCode(var toRead: AnsiString; var writeFile : TextFile);
 var
 	i : Integer;
@@ -76,6 +73,11 @@ begin
 	end;
 end;
 
+//
+// Reads The brainfuck Code file copies and copies it into an AnsiString
+// once Finshed Reading Converts Code Into Pascal Code and write that Into
+// a new file
+//
 procedure ReadFile(var inputFileName, outputFileName: UnicodeString);
 var
 	readingLine, brainFuckCode: AnsiString;
@@ -95,12 +97,13 @@ begin
   WriteLn('Creating ', outputFileName);
   AssignFile(writeFile, outputFileName);
 	Rewrite(writeFile);
-	DeleteGarbage(brainFuckCode, 0);
+	WriteLn('Converting ', brainFuckCode, 'Into Pascal');
+	// Pascal File
   WriteLn(writeFile, 'program test;');
 	WriteLn(writeFile, 'uses');
 	WriteLn(writeFile, '	SysUtils, Crt;');
 	WriteLn(writeFile, 'var');
-	WriteLn(writeFile, '	boxs: array [0..', TotalAcco(brainFuckCode, '>'), '] of Byte;');
+	WriteLn(writeFile, '	boxs: array [0..', OccurOfChar(brainFuckCode, '>') - OccurOfChar(brainFuckCode, '<') + 1, '] of Byte;');
 	WriteLn(writeFile, '	i : Integer;');
 	WriteLn(writeFile, 'begin');
 	WriteLn(writeFile, '	i:=0;');
@@ -109,10 +112,14 @@ begin
 	WriteLn(writeFile, '	i := 0;');
 	ReadBrainFuckCode(brainFuckCode, writeFile);
 	WriteLn(writeFile, 'end.');
+	// Pascal File
 	CloseFile(writeFile);
 	WriteLn('Read ', Length(brainFuckCode), ' Chars');
 end;
 
+//
+// interprets parameters passed through the command line
+//
 function CheckInput(var compilerOptions: Options): Boolean;
 var
   idx: Byte;
@@ -154,6 +161,9 @@ begin
 		WriteLn('Must Select Input File');
 end;
 
+//
+// Compiles the genrated pascal code
+//
 procedure CompilePascalCode(const compilerOptions: Options);
 var
   terminalOut: AnsiString;
@@ -164,7 +174,7 @@ begin
 		RunCommand('c:\windows\system32\cmd.exe', ['/c', 'fpc -S2 ', compilerOptions.outputFileName], terminalOut);
 	{$ENDIF}
   {$IFDEF UNIX}
-    RunCommand('/bin/bash', ['-c', 'fpc -S2 ', compilerOptions.pascalOptions, compilerOptions.outputFileName], terminalOut);
+    RunCommand('/bin/bash', ['-c', 'fpc -S2 ', compilerOptions.outputFileName], terminalOut);
   {$ENDIF}
   WriteLn(terminalOut);
 end;
@@ -176,6 +186,7 @@ var
 begin
 	if CheckInput(compilerOptions) then
 		ReadFile(compilerOptions.inputFileName, compilerOptions.outputFileName);
+
   if FileExists(compilerOptions.outputFileName) then
     CompilePascalCode(compilerOptions);
   if (compilerOptions.keepFile = false) then

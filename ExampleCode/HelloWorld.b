@@ -1,4 +1,4 @@
-Source https://en.wikipedia.org/wiki/Brainfuck
+Source https://en wikipedia org/wiki/Brainfuck
 ++++++++               Set Cell #0 to 8
 [
     >++++               Add 4 to Cell #1; this will always set Cell #1 to 4
