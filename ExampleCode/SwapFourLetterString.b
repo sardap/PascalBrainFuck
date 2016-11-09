@@ -1,3 +1,5 @@
+Author: Paul Sarda
+Purpose: reverses four chars
 >,. FirstLetter
 >,.
 >,.
