@@ -44,40 +44,76 @@ begin
 	idx -= 1;
 end;
 
+function ReturnNumberOfChar(num: Integer; reChar: Char): String;
+var
+	i : Integer;
+
+begin
+	result := '';
+	i:= 0;
+	while (num >= i) do
+	begin
+		result := result + reChar;
+		i += 1;
+	end;
+end;
 
 //
 // interprets Brainfuck code an writes the approtie Pascal Code the writeFile
 //
 procedure ReadBrainFuckCode(var toRead: AnsiString; var writeFile : TextFile);
 var
-	i : Integer;
+	i, tabs : Integer;
 
 begin
 	i := 0;
-	while i <= Length(toRead) do
+	tabs := 1;
+	while (i <= Length(toRead)) do
 	begin
 		case toRead[i] of
-			'>'	:  WriteLn(writeFile,'	i += ', HowManyUntilNext(toRead, i, '>'), ';');
-			'<'	: WriteLn(writeFile, '	i -= ', HowManyUntilNext(toRead, i, '<'), ';');
-			'+'	: WriteLn(writeFile, '	boxs[i] += ', HowManyUntilNext(toRead, i, '+'), ';');
-			'-'	: WriteLn(writeFile, '	boxs[i] -=' , HowManyUntilNext(toRead, i, '-'), ';');
-			'.'	: WriteLn(writeFile, '	Write(Chr(boxs[i]));');
-			','	: WriteLn(writeFile, '	boxs[i] := Byte(ReadKey);');
+			'>'	: WriteLn(writeFile, ReturnNumberOfChar(tabs, #9), 'i += ', HowManyUntilNext(toRead, i, '>'), ';');
+			'<'	: WriteLn(writeFile, ReturnNumberOfChar(tabs, #9), 'i -= ', HowManyUntilNext(toRead, i, '<'), ';');
+			'+'	: WriteLn(writeFile, ReturnNumberOfChar(tabs, #9), 'boxs[i] += ', HowManyUntilNext(toRead, i, '+'), ';');
+			'-'	: WriteLn(writeFile, ReturnNumberOfChar(tabs, #9), 'boxs[i] -=' , HowManyUntilNext(toRead, i, '-'), ';');
+			'.'	: WriteLn(writeFile, ReturnNumberOfChar(tabs, #9), 'Write(Chr(boxs[i]));');
+			','	: WriteLn(writeFile, ReturnNumberOfChar(tabs, #9), 'boxs[i] := Byte(ReadKey);');
 			'['	: begin
-				 			WriteLn(writeFile, '	while(boxs[i] <> 0) do');
-							WriteLn(writeFile, '	begin');
+				 			WriteLn(writeFile, ReturnNumberOfChar(tabs, #9), 'while(boxs[i] <> 0) do');
+							WriteLn(writeFile, ReturnNumberOfChar(tabs, #9), 'begin');
+							tabs += 1;
 						end;
-			']'	: WriteLn(writeFile, '	end;');
+			']'	: begin
+							WriteLn(writeFile, ReturnNumberOfChar(tabs, #9), 'end;');
+							tabs -= 1;
+						end;
 		end;
 		i += 1;
 	end;
 end;
-
 //
+// Deleting From AnsiStrings Is really Wried So this is a garbage Soultion
+//
+function RemoveGarbage(const code: AnsiString): AnsiString;
+var
+	i : Integer;
+
+begin
+	// There must be a better way
+	for i:=0 to Length(code) do
+		if ((code[i] = '>') or
+				(code[i] = '<') or
+				(code[i] = '+') or
+				(code[i] = '-') or
+				(code[i] = '.') or
+				(code[i] = ',') or
+				(code[i] = '[') or
+				(code[i] = ']')
+				) then
+			result := result + code[i];
+end;
 // Reads The brainfuck Code file copies and copies it into an AnsiString
 // once Finshed Reading Converts Code Into Pascal Code and write that Into
 // a new file
-//
 procedure ReadFile(var inputFileName, outputFileName: UnicodeString);
 var
 	readingLine, brainFuckCode: AnsiString;
@@ -93,6 +129,7 @@ begin
 		ReadLn(readingFile, readingLine);
 		brainFuckCode := brainFuckCode + readingLine;
 	end;
+	brainFuckCode := RemoveGarbage(brainFuckCode);
   CloseFile(readingFile);
   WriteLn('Creating ', outputFileName);
   AssignFile(writeFile, outputFileName);
@@ -103,6 +140,7 @@ begin
 	WriteLn(writeFile, 'uses');
 	WriteLn(writeFile, '	SysUtils, Crt;');
 	WriteLn(writeFile, 'var');
+	// Sets Size of array to the amount of right shifts to create the smallest Possbile Array
 	WriteLn(writeFile, '	boxs: array [0..', OccurOfChar(brainFuckCode, '>') - OccurOfChar(brainFuckCode, '<') + 1, '] of Byte;');
 	WriteLn(writeFile, '	i : Integer;');
 	WriteLn(writeFile, 'begin');
