@@ -1,6 +1,6 @@
 {
 	Author: Paul Sarda
-	Version 0.01
+	Version 0.02
 }
 program PascalBrainFuck;
 
@@ -12,8 +12,9 @@ type
  Options = record
   keepFile : Boolean;
   inputFileName : UnicodeString;
-  outputFileName : UnicodeString;
-  pascalOptions : String;
+  outFileName : UnicodeString;
+  pasOpt : UnicodeString;
+	run : Boolean;
  end;
 
 //
@@ -44,7 +45,7 @@ begin
 	idx -= 1;
 end;
 
-function ReturnNumberOfChar(num: Integer; reChar: Char): String;
+function RetNumOfChar(num: Integer; reChar: Char): String;
 var
 	i : Integer;
 
@@ -71,19 +72,19 @@ begin
 	while (i <= Length(toRead)) do
 	begin
 		case toRead[i] of
-			'>'	: WriteLn(writeFile, ReturnNumberOfChar(tabs, #9), 'i += ', HowManyUntilNext(toRead, i, '>'), ';');
-			'<'	: WriteLn(writeFile, ReturnNumberOfChar(tabs, #9), 'i -= ', HowManyUntilNext(toRead, i, '<'), ';');
-			'+'	: WriteLn(writeFile, ReturnNumberOfChar(tabs, #9), 'boxs[i] += ', HowManyUntilNext(toRead, i, '+'), ';');
-			'-'	: WriteLn(writeFile, ReturnNumberOfChar(tabs, #9), 'boxs[i] -=' , HowManyUntilNext(toRead, i, '-'), ';');
-			'.'	: WriteLn(writeFile, ReturnNumberOfChar(tabs, #9), 'Write(Chr(boxs[i]));');
-			','	: WriteLn(writeFile, ReturnNumberOfChar(tabs, #9), 'boxs[i] := Byte(ReadKey);');
+			'>'	: WriteLn(writeFile, RetNumOfChar(tabs, #9), 'i += ', HowManyUntilNext(toRead, i, '>'), ';');
+			'<'	: WriteLn(writeFile, RetNumOfChar(tabs, #9), 'i -= ', HowManyUntilNext(toRead, i, '<'), ';');
+			'+'	: WriteLn(writeFile, RetNumOfChar(tabs, #9), 'boxs[i] += ', HowManyUntilNext(toRead, i, '+'), ';');
+			'-'	: WriteLn(writeFile, RetNumOfChar(tabs, #9), 'boxs[i] -=' , HowManyUntilNext(toRead, i, '-'), ';');
+			'.'	: WriteLn(writeFile, RetNumOfChar(tabs, #9), 'Write(Chr(boxs[i]));');
+			','	: WriteLn(writeFile, RetNumOfChar(tabs, #9), 'boxs[i] := Byte(ReadKey);');
 			'['	: begin
-				 			WriteLn(writeFile, ReturnNumberOfChar(tabs, #9), 'while(boxs[i] <> 0) do');
-							WriteLn(writeFile, ReturnNumberOfChar(tabs, #9), 'begin');
+				 			WriteLn(writeFile, RetNumOfChar(tabs, #9), 'while(boxs[i] <> 0) do');
+							WriteLn(writeFile, RetNumOfChar(tabs, #9), 'begin');
 							tabs += 1;
 						end;
 			']'	: begin
-							WriteLn(writeFile, ReturnNumberOfChar(tabs, #9), 'end;');
+							WriteLn(writeFile, RetNumOfChar(tabs, #9), 'end;');
 							tabs -= 1;
 						end;
 		end;
@@ -114,7 +115,7 @@ end;
 // Reads The brainfuck Code file copies and copies it into an AnsiString
 // once Finshed Reading Converts Code Into Pascal Code and write that Into
 // a new file
-procedure ReadFile(var inputFileName, outputFileName: UnicodeString);
+procedure ReadFile(var inputFileName, outFileName: UnicodeString);
 var
 	readingLine, brainFuckCode: AnsiString;
 	readingFile : TextFile;
@@ -131,8 +132,8 @@ begin
 	end;
 	brainFuckCode := RemoveGarbage(brainFuckCode);
   CloseFile(readingFile);
-  WriteLn('Creating ', outputFileName);
-  AssignFile(writeFile, outputFileName);
+  WriteLn('Creating ', outFileName);
+  AssignFile(writeFile, outFileName);
 	Rewrite(writeFile);
 	WriteLn('Converting ', brainFuckCode, 'Into Pascal');
 	// Pascal File
@@ -158,7 +159,7 @@ end;
 //
 // interprets parameters passed through the command line
 //
-function CheckInput(var compilerOptions: Options): Boolean;
+function CheckInput(var compOpt: Options): Boolean;
 var
   idx: Byte;
 
@@ -169,31 +170,57 @@ begin
 	begin
     if ParamStr(idx) = '-k' then
     begin
-      compilerOptions.keepFile := true;
+      compOpt.keepFile := true;
       idx += 1;
     end
     else
-      compilerOptions.keepFile := false;
-		compilerOptions.inputFileName := ParamStr(idx);
-    idx += 1;
-		if FileExists(compilerOptions.inputFileName) then
+      compOpt.keepFile := false;
+		if ParamStr(idx) = '-r' then
 		begin
-			WriteLn('Selected File ', compilerOptions.inputFileName);
+			compOpt.run := true;
+			idx += 1;
+		end
+		else
+			compOpt.run := false;
+		{
+		if (ParamStr(idx) = '-p') then
+		begin
+			idx += 1;
+			compOpt.pasOpt := ParamStr(idx);
+			WriteLn('Fuck');
+			Delete(compOpt.pasOpt, Pos('(', compOpt.pasOpt), 1);
+			while (Pos(')', ParamStr(idx)) <> 1) do
+			begin
+				compOpt.pasOpt := compOpt.pasOpt + ParamStr(idx);
+				idx += 1;
+			end;
+			Delete(compOpt.pasOpt, Pos(')', compOpt.pasOpt), 1);
+		end
+		else
+			compOpt.pasOpt := '';}
+		compOpt.inputFileName := ParamStr(idx);
+    idx += 1;
+		if FileExists(compOpt.inputFileName) then
+		begin
+			WriteLn('Selected File ', compOpt.inputFileName);
       if ParamStr(idx) = '-na'  then
       begin
         idx += 1;
-        compilerOptions.outputFileName := ParamStr(idx);
+        compOpt.outFileName := ParamStr(idx);
       end
       else
-        WriteLn(Pos('.', compilerOptions.inputFileName));
-        compilerOptions.outputFileName := Copy(compilerOptions.inputFileName, 0, Pos('.', compilerOptions.inputFileName)) + 'pas';
-      if (compilerOptions.outputFileName <> compilerOptions.inputFileName) then
+				// Checks if there is an ./ at the start of the name for the file then deletes it
+				if (Pos('.', compOpt.inputFileName) = 1) then
+					Delete(compOpt.inputFileName, 1, 2);
+				//Copies the name part of the file then adds the .pas
+        compOpt.outFileName := Copy(compOpt.inputFileName, 0, Pos('.', compOpt.inputFileName)) + 'pas';
+      if (compOpt.outFileName <> compOpt.inputFileName) then
         result := true
       else
         WriteLn('Input Name Cannot be the same as Output Name');
 		end
     else
-			WriteLn(compilerOptions.inputFileName, ' Not Found');
+			WriteLn(compOpt.inputFileName, ' Not Found');
 	end
 	else
 		WriteLn('Must Select Input File');
@@ -202,36 +229,56 @@ end;
 //
 // Compiles the genrated pascal code
 //
-procedure CompilePascalCode(const compilerOptions: Options);
+procedure CompilePascalCode(const compOpt: Options);
 var
-  terminalOut: AnsiString;
+  terminalOut, compileComand: AnsiString;
 
 begin
-  WriteLn('Compiling Pascal Code from ', compilerOptions.outputFileName);
+	compileComand := '/c ' + 'fpc -S2 ' + compOpt.pasOpt + compOpt.outFileName;
+  WriteLn('Compiling Pascal Code from ', compOpt.outFileName);
+	WriteLn('Running: ', compileComand);
   {$IFDEF WINDOWS}
-		RunCommand('c:\windows\system32\cmd.exe', ['/c', 'fpc -S2 ', compilerOptions.outputFileName], terminalOut);
+		RunCommand('c:\windows\system32\cmd.exe', [compileComand], terminalOut);
 	{$ENDIF}
   {$IFDEF UNIX}
-    RunCommand('/bin/bash', ['-c', 'fpc -S2 ', compilerOptions.outputFileName], terminalOut);
+    RunCommand('/bin/bash', [compileComand], terminalOut);
   {$ENDIF}
   WriteLn(terminalOut);
 end;
 
-procedure main();
+procedure RunProgram(const compOpt: Options);
 var
-	compilerOptions : Options;
+	terminalOut, toExcute: AnsiString;
 
 begin
-	if CheckInput(compilerOptions) then
-		ReadFile(compilerOptions.inputFileName, compilerOptions.outputFileName);
+	toExcute := '.\' + Copy(compOpt.outFileName, 0, Pos('.', compOpt.inputFileName));
+	{$IFDEF WINDOWS}
+	 	toExcute := toExcute + 'exe';
+		RunCommand('c:\windows\system32\cmd.exe', [toExcute], terminalOut);
+	{$ENDIF}
+  {$IFDEF UNIX}
+    RunCommand('/bin/bash', [toExcute], terminalOut);
+  {$ENDIF}
+	WriteLn(terminalOut);
+end;
 
-  if FileExists(compilerOptions.outputFileName) then
-    CompilePascalCode(compilerOptions);
-  if (compilerOptions.keepFile = false) then
+procedure main();
+var
+	compOpt : Options;
+
+begin
+	if CheckInput(compOpt) then
+		ReadFile(compOpt.inputFileName, compOpt.outFileName);
+
+  if FileExists(compOpt.outFileName) then
+    CompilePascalCode(compOpt);
+  if (compOpt.keepFile = false) then
   begin
-    DeleteFile(compilerOptions.outputFileName);
-    DeleteFile(Copy(compilerOptions.inputFileName, 0, Pos('.', compilerOptions.inputFileName)) + 'o');
+    DeleteFile(compOpt.outFileName);
+    DeleteFile(Copy(compOpt.inputFileName, 0, Pos('.', compOpt.inputFileName)) + 'o');
   end;
+	if (compOpt.run = true) then
+		RunProgram(compOpt);
 end;
 
 begin
