@@ -1,8 +1,12 @@
 {
+	I apologise for the language bellow but it is the name of the programming language.
+	Brain(Blank) is a programming language created in 1992 by Urban Muller https://en.wikipedia.org/wiki/BrainBlank .
+	The Programming Language Interested Me. so I created this interpreter which reads BrainBlank Code and Translates it into pascal then compiles said pascal code.
+	I already had an D/HD Custom program and I made this Over the course of the final week so this IS NOT MY CUSTOM PROGRAM but it is Additional work I Completed. you can find the complete Public GitHub Repo here https://github.com/sardap/PascalBrainBlank (I am the only contributor) on the Repo you can find Brain(Blank) some BrainBlank code written by me and a readme.
 	Author: Paul Sarda
 	Version 0.02
 }
-program PascalBrainFuck;
+program PascalBrainBlank;
 
 uses
   SysUtils, process;
@@ -32,7 +36,7 @@ begin
 end;
 
 //
-// Counts How many Chars in a string in a row example: ++++ would be 4 so it would return 4
+// Counts How many Chars in a string in a row example: ++++> would be 4 so it would return 4
 //
 function HowManyUntilNext(var toRead: AnsiString; var idx: Integer; toCheck: AnsiChar): Byte;
 begin
@@ -45,6 +49,9 @@ begin
 	idx -= 1;
 end;
 
+//
+// Returns a string with the num of char given eg 4, #9 returns 4 tabs
+//
 function RetNumOfChar(num: Integer; reChar: Char): String;
 var
 	i : Integer;
@@ -60,14 +67,15 @@ begin
 end;
 
 //
-// interprets Brainfuck code an writes the approtie Pascal Code the writeFile
+// interprets BrainBlank code an writes the approtie Pascal Code the writeFile
 //
-procedure ReadBrainFuckCode(var toRead: AnsiString; var writeFile : TextFile);
+procedure ReadBrainBlankCode(var toRead: AnsiString; var writeFile : TextFile);
 var
 	i, tabs : Integer;
 
 begin
 	i := 0;
+	//Used to Track how many tabs are needed in the write file
 	tabs := 1;
 	while (i <= Length(toRead)) do
 	begin
@@ -92,7 +100,7 @@ begin
 	end;
 end;
 //
-// Deleting From AnsiStrings Is really Wried So this is a garbage Soultion
+// Deleting From AnsiStrings Is really Strange So this is a garbage Soultion
 //
 function RemoveGarbage(const code: AnsiString): AnsiString;
 var
@@ -112,48 +120,48 @@ begin
 				) then
 			result := result + code[i];
 end;
-// Reads The brainfuck Code file copies and copies it into an AnsiString
+// Reads The BrainBlank Code file copies and copies it into an AnsiString
 // once Finshed Reading Converts Code Into Pascal Code and write that Into
 // a new file
 procedure ReadFile(var inputFileName, outFileName: UnicodeString);
 var
-	readingLine, brainFuckCode: AnsiString;
+	readingLine, BrainBlankCode: AnsiString;
 	readingFile : TextFile;
 	writeFile : TextFile;
 
 begin
-  WriteLn('UnbrainFucking ', inputFileName);
+  WriteLn('UnBrainBlanking ', inputFileName);
 	AssignFile(readingFile, inputFileName);
 	Reset(readingFile);
 	while not eof(readingFile) do
 	begin
 		ReadLn(readingFile, readingLine);
-		brainFuckCode := brainFuckCode + readingLine;
+		BrainBlankCode := BrainBlankCode + readingLine;
 	end;
-	brainFuckCode := RemoveGarbage(brainFuckCode);
+	BrainBlankCode := RemoveGarbage(BrainBlankCode);
   CloseFile(readingFile);
   WriteLn('Creating ', outFileName);
   AssignFile(writeFile, outFileName);
 	Rewrite(writeFile);
-	WriteLn('Converting ', brainFuckCode, 'Into Pascal');
-	// Pascal File
+	WriteLn('Converting ', BrainBlankCode, 'Into Pascal');
+	// Start of Out Pascal File
   WriteLn(writeFile, 'program test;');
 	WriteLn(writeFile, 'uses');
 	WriteLn(writeFile, '	SysUtils, Crt;');
 	WriteLn(writeFile, 'var');
 	// Sets Size of array to the amount of right shifts to create the smallest Possbile Array
-	WriteLn(writeFile, '	boxs: array [0..', OccurOfChar(brainFuckCode, '>') - OccurOfChar(brainFuckCode, '<') + 1, '] of Byte;');
+	WriteLn(writeFile, '	boxs: array [0..', OccurOfChar(BrainBlankCode, '>') - OccurOfChar(BrainBlankCode, '<') + 1, '] of Byte;');
 	WriteLn(writeFile, '	i : Integer;');
 	WriteLn(writeFile, 'begin');
 	WriteLn(writeFile, '	i:=0;');
 	WriteLn(writeFile, '	for i:=0 to High(boxs) do');
 	WriteLn(writeFile, '		boxs[i] := 0;');
 	WriteLn(writeFile, '	i := 0;');
-	ReadBrainFuckCode(brainFuckCode, writeFile);
+	ReadBrainBlankCode(BrainBlankCode, writeFile);
 	WriteLn(writeFile, 'end.');
-	// Pascal File
+	// end of Pascal File
 	CloseFile(writeFile);
-	WriteLn('Read ', Length(brainFuckCode), ' Chars');
+	WriteLn('Read ', Length(BrainBlankCode), ' Chars');
 end;
 
 //
@@ -182,22 +190,6 @@ begin
 		end
 		else
 			compOpt.run := false;
-		{
-		if (ParamStr(idx) = '-p') then
-		begin
-			idx += 1;
-			compOpt.pasOpt := ParamStr(idx);
-			WriteLn('Fuck');
-			Delete(compOpt.pasOpt, Pos('(', compOpt.pasOpt), 1);
-			while (Pos(')', ParamStr(idx)) <> 1) do
-			begin
-				compOpt.pasOpt := compOpt.pasOpt + ParamStr(idx);
-				idx += 1;
-			end;
-			Delete(compOpt.pasOpt, Pos(')', compOpt.pasOpt), 1);
-		end
-		else
-			compOpt.pasOpt := '';}
 		compOpt.inputFileName := ParamStr(idx);
     idx += 1;
 		if FileExists(compOpt.inputFileName) then
@@ -245,15 +237,18 @@ begin
   {$ENDIF}
   WriteLn(terminalOut);
 end;
-
+//
+// This is broken
+//
 procedure RunProgram(const compOpt: Options);
 var
 	terminalOut, toExcute: AnsiString;
 
 begin
-	toExcute := '.\' + Copy(compOpt.outFileName, 0, Pos('.', compOpt.inputFileName));
+	toExcute := '-c' + '.\' + Copy(compOpt.outFileName, 0, Pos('.', compOpt.inputFileName));
 	{$IFDEF WINDOWS}
 	 	toExcute := toExcute + 'exe';
+		WriteLn('Excuting ', toExcute);
 		RunCommand('c:\windows\system32\cmd.exe', [toExcute], terminalOut);
 	{$ENDIF}
   {$IFDEF UNIX}
