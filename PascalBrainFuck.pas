@@ -169,7 +169,7 @@ begin
 	// Start of Out C File
   WriteLn(writeFile, '#include<stdio.h>');
 	WriteLn(writeFile, 'int main(void){');
-	WriteLn(writeFile, #9'char boxs [', OccurOfChar(brainFuckCode, '>') - OccurOfChar(brainFuckCode, '<') + 1,'] = {0};');
+	WriteLn(writeFile, #9'char boxs [', OccurOfChar(brainFuckCode, '>'),'] = {0};');
 	WriteLn(writeFile, #9'int i = 0;');
 	ConvertBrainFuckC(brainFuckCode, writeFile);
 	WriteLn(writeFile, #9'return 0;');
@@ -245,6 +245,7 @@ begin
 		compOpt.keepFile := false;
 		compOpt.comLang := LaPascal;
 		compOpt.comOpt := '';
+		//Switch section
 		while (ParamCount - idx >= 1) do
 		begin
 			if ParamStr(idx) = '-k' then
